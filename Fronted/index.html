@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FaceITry</title>
+  <style>
+    body {
+      background-color: #1A1E21;
+      color: #F5F6F7;
+      font-family: Helvetica, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    video {
+      border-radius: 16px;
+      width: 480px;
+      max-width: 90vw;
+      height: auto;
+      margin-bottom: 16px;
+    }
+
+    button {
+      background-color: #D5FE12;
+      color: #1A1E21;
+      font-weight: bold;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #c0eb10;
+    }
+
+    #countdown {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="countdown"></div>
+  <video id="video" autoplay></video>
+  <button id="captureBtn">CAPTURE</button>
+
+  <script>
+    const video = document.getElementById('video');
+    const button = document.getElementById('captureBtn');
+    const countdown = document.getElementById('countdown');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    button.addEventListener('click', () => {
+      let count = 3;
+      countdown.innerText = count;
+
+      const interval = setInterval(() => {
+        count--;
+        countdown.innerText = count > 0 ? count : '';
+        if (count === 0) {
+          clearInterval(interval);
+          takeSnapshot();
+        }
+      }, 1000);
+    });
+
+    function takeSnapshot() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('image', blob, 'capture.jpg');
+
+        fetch('http://127.0.0.1:5000/swap', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.blob())
+        .then(resultBlob => {
+          const url = URL.createObjectURL(resultBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'face_swap_result.mp4';
+          link.click();
+        });
+      }, 'image/jpeg');
+    }
+  </script>
+</body>
+</html>
