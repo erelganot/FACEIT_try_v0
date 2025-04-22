@@ -15,6 +15,19 @@ FFMPEG_PATH = r"C:\Users\Malabi\scoop\apps\ffmpeg\current\bin"  # עדכן לפ�
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image provided'}), 400
+
+    image = request.files['image']
+    image.save('input.jpg')  # Save the uploaded image
+
+    # Here, you would process the image with FaceFusion or your desired method
+    # For demonstration, let's assume the output video is saved as 'static/output.mp4'
+
+    return jsonify({'video_url': 'static/output.mp4'}) 
+    
 @app.route("/swap", methods=["POST"])
 def swap():
     if "image" not in request.files:
